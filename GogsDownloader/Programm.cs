@@ -1,4 +1,5 @@
 ﻿using GogsDownloader;
+using GogsDownloader.Database;
 using Newtonsoft.Json;
 
 var config = new Config();
@@ -11,14 +12,13 @@ var baseRepoStr = config.BaseGogsUrl;
 
 if (string.IsNullOrWhiteSpace(baseRepoStr))
 {
-    Console.WriteLine("Пустой адресс gogs!");
+    Console.WriteLine("Empty Gogs url!");
     Console.ReadLine();
     return;
 }
 
 if (baseRepoStr.EndsWith('/'))
     baseRepoStr = baseRepoStr.Remove(baseRepoStr.Length - 1);
-Console.WriteLine(baseRepoStr);
 
 try
 {
@@ -31,36 +31,30 @@ catch (Exception e)
     return;
 }
 
-Console.Write("Введите имя пользователя: ");
-var username = Console.ReadLine();
+GogsDbContext dbContext = new GogsDbContext(config.ConnectionString, config.DatabaseType);
 
-if (string.IsNullOrWhiteSpace(username))
+foreach (var user in config.Users)
 {
-    Console.WriteLine("Пустое имя пользователя!");
-    Console.ReadLine();
-    return;
+    Console.WriteLine($"Check user '{user.Username}'");
+    var gogsUser = dbContext.Users.FirstOrDefault(x => x.Name == user.Username);
+    if (gogsUser is null)
+    {
+        Console.WriteLine($"User {user.Username} dont find in Gogs");
+        continue;
+    }
+
+    var gogsUserRepos = dbContext.Repositories.Where(x => x.OwnerId == gogsUser.Id).ToArray();
+    if (gogsUserRepos.Length == 0)
+    {
+        Console.WriteLine($"User {user.Username} dont contains any repos in Gogs");
+        continue;
+    }
+
+    foreach (var repo in gogsUserRepos)
+    {
+        var path = Tools.RecreateUserRepoDir("userData", user.Username, repo.Name);
+        Tools.CloneRepository(baseRepoStr, user.Username, user.Password, repo.Name, path, true);
+    }
 }
 
-Console.Write("Введите пароль пользователя: ");
-var password = Console.ReadLine();
-
-if (string.IsNullOrWhiteSpace(password))
-{
-    Console.WriteLine("Пустое имя пользователя!");
-    Console.ReadLine();
-    return;
-}
-
-Console.Write("Введите название репозитория: ");
-var repoName = Console.ReadLine();
-
-if (string.IsNullOrWhiteSpace(repoName))
-{
-    Console.WriteLine("Пустое название репозитория!");
-    Console.ReadLine();
-    return;
-}
-
-var path = Tools.RecreateUserRepoDir("userData", username, repoName);
-
-Tools.CloneRepository(baseRepoStr, username, password, repoName, path, true);
+Console.ReadLine();
