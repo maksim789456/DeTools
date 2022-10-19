@@ -1,12 +1,7 @@
 ﻿using GogsDownloader;
 using GogsDownloader.Database;
-using Newtonsoft.Json;
 
-var config = new Config();
-if (!File.Exists("config.json"))
-    File.WriteAllText("config.json", JsonConvert.SerializeObject(config));
-else
-    config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json")) ?? new Config();
+var config = Config.GetInstance();
 
 var baseRepoStr = config.BaseGogsUrl;
 
@@ -32,6 +27,13 @@ catch (Exception e)
 }
 
 GogsDbContext dbContext = new GogsDbContext(config.ConnectionString, config.DatabaseType);
+
+if (config.Users.Length == 0)
+{
+    Console.WriteLine("No users data in config!");
+    Console.ReadLine();
+    return;
+}
 
 foreach (var user in config.Users)
 {
