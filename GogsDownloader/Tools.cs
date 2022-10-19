@@ -8,25 +8,39 @@ public static class Tools
     {
         var credentials = new UsernamePasswordCredentials
             { Username = username, Password = password };
-        var co = new CloneOptions
+        var cloneOptions = new CloneOptions
         {
-            CredentialsProvider = (url, user, cred) => credentials
+            CredentialsProvider = (_, _, _) => credentials
         };
         var url = $"{baseRepoUrl}/{username}/{repoName}.git";
-        Console.WriteLine($"Save url to {pathToSave}");
-        Repository.Clone(url, pathToSave, co);
+        Console.WriteLine($"Save {url} to {pathToSave}");
+        Repository.Clone(url, pathToSave, cloneOptions);
 
         if (withBranches)
+            CloneRemoteRepositoryBranches(pathToSave);
+    }
+
+    public static void CloneRemoteRepositoryBranches(string repoPath)
+    {
+        using var repo = new Repository(repoPath);
+
+        // if only one remote branch -> skip branches grabbing
+        if (repo.Branches.Count(x => x.IsRemote) == 1)
+            return;
+
+        // starting remote branches grabbing
+        foreach (var remoteBranch in repo.Branches.Where(x => x.IsRemote))
         {
-            using (var repo = new Repository(pathToSave))
-            {
-                repo.Network.Remotes.Update("origin", x => x.Url = url);
-                var options = new PushOptions
-                {
-                    CredentialsProvider = (url, user, cred) => credentials
-                };
-                repo.Network.Push(repo.Network.Remotes["origin"],repo.Refs.Select(x=>x.CanonicalName),options);
-            }
+            // make local name from friendly name ('origin/test' to 'test')
+            var localBranchName = remoteBranch.FriendlyName.Split('/').Last();
+            // if branch with this name exists skip this remote
+            if (repo.Branches[localBranchName] != null)
+                continue;
+            Console.WriteLine($"Grab branch '{remoteBranch.FriendlyName}' as '{localBranchName}'");
+            // create local branch by local name
+            Branch localBranch = repo.CreateBranch(localBranchName, remoteBranch.Tip);
+            // link local branch to remote branch
+            repo.Branches.Update(localBranch, b => b.UpstreamBranch = remoteBranch.UpstreamBranchCanonicalName);
         }
     }
 
