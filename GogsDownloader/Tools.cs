@@ -1,4 +1,4 @@
-﻿using LibGit2Sharp;
+using LibGit2Sharp;
 
 namespace GogsDownloader;
 
@@ -20,13 +20,17 @@ public static class Tools
             CloneRemoteRepositoryBranches(pathToSave);
     }
 
-    public static void CloneRemoteRepositoryBranches(string repoPath)
+    /// <summary>
+    /// Clone remote branches as local branches
+    /// </summary>
+    /// <param name="repoPath">local repository path</param>
+    public static IEnumerable<string> CloneRemoteRepositoryBranches(string repoPath)
     {
         using var repo = new Repository(repoPath);
 
         // if only one remote branch -> skip branches grabbing
         if (repo.Branches.Count(x => x.IsRemote) == 1)
-            return;
+            return Array.Empty<string>();
 
         // starting remote branches grabbing
         foreach (var remoteBranch in repo.Branches.Where(x => x.IsRemote))
@@ -36,14 +40,22 @@ public static class Tools
             // if branch with this name exists skip this remote
             if (repo.Branches[localBranchName] != null)
                 continue;
-            Console.WriteLine($"Grab branch '{remoteBranch.FriendlyName}' as '{localBranchName}'");
             // create local branch by local name
             Branch localBranch = repo.CreateBranch(localBranchName, remoteBranch.Tip);
             // link local branch to remote branch
             repo.Branches.Update(localBranch, b => b.UpstreamBranch = remoteBranch.UpstreamBranchCanonicalName);
         }
+
+        return repo.Branches.Where(x => !x.IsRemote).Select(x => x.FriendlyName).ToArray();
     }
 
+    /// <summary>
+    /// Create directory for user and repository
+    /// </summary>
+    /// <param name="basePath">Base path</param>
+    /// <param name="username">User username</param>
+    /// <param name="repoName">User repository name</param>
+    /// <returns></returns>
     public static string RecreateUserRepoDir(string basePath, string username, string repoName)
     {
         if (!Directory.Exists(basePath))
@@ -54,19 +66,50 @@ public static class Tools
 
         var path = Path.Combine(basePath, username, repoName);
 
+        RecreateDirectory(path);
+
+        return path;
+    }
+
+    /// <summary>
+    /// Create directory by path
+    /// If directory exists at first delete her
+    /// </summary>
+    /// <param name="path"></param>
+    private static void RecreateDirectory(string path)
+    {
         if (Directory.Exists(path))
-        {
-            var directory = new DirectoryInfo(path) { Attributes = FileAttributes.Normal };
-            foreach (var info in directory.GetFileSystemInfos("*", SearchOption.AllDirectories))
-            {
-                info.Attributes = FileAttributes.Normal;
-            }
-            Directory.Delete(path, true);
-        }
+            RecursiveDeleteDirectory(path);
 
         if (!Directory.Exists(path))
             Directory.CreateDirectory(path);
+    }
 
-        return path;
+    /// <summary>
+    /// Set basic access level to directory and recursively delete her
+    /// </summary>
+    /// <param name="path">Path to directory</param>
+    private static void RecursiveDeleteDirectory(string path)
+    {
+        var directory = new DirectoryInfo(path) { Attributes = FileAttributes.Normal };
+        foreach (var info in directory.GetFileSystemInfos("*", SearchOption.AllDirectories))
+        {
+            info.Attributes = FileAttributes.Normal;
+        }
+
+        Directory.Delete(path, true);
+    }
+
+    private static void CopyFilesRecursively(string sourcePath, string targetPath)
+    {
+        foreach (var dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
+        {
+            Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
+        }
+
+        foreach (var newPath in Directory.GetFiles(sourcePath, "*.*",SearchOption.AllDirectories))
+        {
+            File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
+        }
     }
 }
