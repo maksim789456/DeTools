@@ -1,10 +1,10 @@
-using LibGit2Sharp;
+﻿using LibGit2Sharp;
 
 namespace GogsDownloader;
 
 public static class Tools
 {
-    public static void CloneRepository(string baseRepoUrl, string username, string password, string repoName, string pathToSave, bool withBranches = false)
+    public static void CloneRepository(string baseRepoUrl, string username, string password, string repoName, string pathToSave, bool branchesAsSeparateFolders)
     {
         var credentials = new UsernamePasswordCredentials
             { Username = username, Password = password };
@@ -14,10 +14,29 @@ public static class Tools
         };
         var url = $"{baseRepoUrl}/{username}/{repoName}.git";
         Console.WriteLine($"Save {url} to {pathToSave}");
-        Repository.Clone(url, pathToSave, cloneOptions);
-
-        if (withBranches)
-            CloneRemoteRepositoryBranches(pathToSave);
+        if (!branchesAsSeparateFolders)
+        {
+            Console.WriteLine("Grabbing remote branches as local");
+            Repository.Clone(url, pathToSave, cloneOptions);
+        }
+        else
+        {
+            Console.WriteLine("Grabbing branches as folders");
+            var tempFolder = Path.Combine(pathToSave, ".temp");
+            RecreateDirectory(tempFolder);
+            Repository.Clone(url, tempFolder, cloneOptions);
+            var branches = CloneRemoteRepositoryBranches(tempFolder);
+            foreach (var branch in branches)
+            {
+                Console.WriteLine($"{branch} as work");
+                var branchPath = Path.Combine(pathToSave, branch);
+                RecreateDirectory(branchPath);
+                CopyFilesRecursively(tempFolder, branchPath);
+                using var repo = new Repository(branchPath);
+                Commands.Checkout(repo, branch);
+            }
+            RecursiveDeleteDirectory(tempFolder);
+        }
     }
 
     /// <summary>
