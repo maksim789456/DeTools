@@ -26,13 +26,9 @@ public class Config
     [JsonConverter(typeof(StringEnumConverter))]
     public DatabaseType DatabaseType { get; set; } = DatabaseType.MySql;
     public User[] Users { get; set; } = Array.Empty<User>();
+    public bool UseExternalUsersFile { get; set; } = false;
+    public string PathToUsersFile { get; set; } = "users.txt";
     public bool BranchesAsSeparateFolders { get; set; } = false;
-}
-
-public class User
-{
-    public string Username { get; set; }
-    public string Password { get; set; }
 }
 
 public enum DatabaseType

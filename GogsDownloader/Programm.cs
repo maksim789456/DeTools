@@ -27,15 +27,18 @@ catch (Exception e)
 }
 
 GogsDbContext dbContext = new GogsDbContext(config.ConnectionString, config.DatabaseType);
+var users = config.UseExternalUsersFile
+    ? UsersFileParser.ParseFile(config.PathToUsersFile).ToArray()
+    : config.Users;
 
-if (config.Users.Length == 0)
+if (users.Length == 0)
 {
-    Console.WriteLine("No users data in config!");
+    Console.WriteLine("No users data in config/users file!");
     Console.ReadLine();
     return;
 }
 
-foreach (var user in config.Users)
+foreach (var user in users)
 {
     Console.WriteLine($"Check user '{user.Username}'");
     var gogsUser = dbContext.Users.FirstOrDefault(x => x.Name == user.Username);
