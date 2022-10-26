@@ -1,7 +1,15 @@
 ﻿using GogsDownloader;
 using GogsDownloader.Database;
 
+Console.WriteLine("GogsDownloader v1.0 by maksim789456");
+
 var config = Config.GetInstance();
+if (config.ConnectionString == "")
+{
+    Console.WriteLine("Config created! Configure program to continue!");
+    Console.ReadLine();
+    return;
+}
 
 var baseRepoStr = config.BaseGogsUrl;
 
