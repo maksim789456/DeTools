@@ -62,6 +62,9 @@ namespace GogsDownloader.Database
             {
                 switch (_databaseType)
                 {
+                    case DatabaseType.MsSql:
+                        optionsBuilder.UseSqlServer(_connectionString);
+                        break;
                     case DatabaseType.Postgre:
                         optionsBuilder.UseNpgsql(_connectionString);
                         break;

@@ -33,6 +33,7 @@ public class Config
 
 public enum DatabaseType
 {
+    MsSql,
     Postgre,
     MySql,
     Sqlite
