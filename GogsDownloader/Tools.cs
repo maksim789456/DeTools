@@ -48,7 +48,7 @@ public static class Tools
         using var repo = new LibGit2Sharp.Repository(repoPath);
 
         // starting remote branches grabbing
-        foreach (var remoteBranch in repo.Branches.Where(x => x.IsRemote))
+        foreach (var remoteBranch in repo.Branches.Where(x => x.IsRemote).ToArray())
         {
             // make local name from friendly name ('origin/test' to 'test')
             var localBranchName = remoteBranch.FriendlyName.Split('/').Last();
@@ -61,7 +61,7 @@ public static class Tools
             repo.Branches.Update(localBranch, b => b.UpstreamBranch = remoteBranch.UpstreamBranchCanonicalName);
         }
 
-        return repo.Branches.Where(x => !x.IsRemote).Select(x => x.FriendlyName).ToArray();
+        return repo.Branches.Where(x => !x.IsRemote).Select(x => x.FriendlyName);
     }
 
     /// <summary>
