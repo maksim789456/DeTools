@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GogsDownloader.Database
+namespace GogsDownloader
 {
     public partial class Action
     {
         public long Id { get; set; }
         public long? UserId { get; set; }
-        public int? OpType { get; set; }
+        public long? OpType { get; set; }
         public long? ActUserId { get; set; }
         public string? ActUserName { get; set; }
         public long? RepoId { get; set; }

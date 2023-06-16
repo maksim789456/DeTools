@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GogsDownloader.Database
+namespace GogsDownloader
 {
     public partial class Repository
     {
@@ -24,6 +24,7 @@ namespace GogsDownloader.Database
         public int NumMilestones { get; set; }
         public int NumClosedMilestones { get; set; }
         public bool? IsPrivate { get; set; }
+        public bool IsUnlisted { get; set; }
         public bool? IsBare { get; set; }
         public bool? IsMirror { get; set; }
         public bool? EnableWiki { get; set; }

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GogsDownloader.Database
+namespace GogsDownloader
 {
     public partial class LoginSource
     {
         public long Id { get; set; }
-        public int? Type { get; set; }
+        public long? Type { get; set; }
         public string? Name { get; set; }
         public bool IsActived { get; set; }
         public bool? IsDefault { get; set; }

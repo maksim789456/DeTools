@@ -1,7 +1,7 @@
 ﻿using GogsDownloader;
 using GogsDownloader.Database;
 
-Console.WriteLine("GogsDownloader v1.0 by maksim789456");
+Console.WriteLine("GogsDownloader v1.1 by maksim789456");
 
 var config = Config.GetInstance();
 if (config.ConnectionString == "")
@@ -34,7 +34,7 @@ catch (Exception e)
     return;
 }
 
-GogsDbContext dbContext = new GogsDbContext(config.ConnectionString, config.DatabaseType);
+gogsContext dbContext = new gogsContext(config.ConnectionString, config.DatabaseType);
 var users = config.UseExternalUsersFile
     ? UsersFileParser.ParseFile(config.PathToUsersFile).ToArray()
     : config.Users;

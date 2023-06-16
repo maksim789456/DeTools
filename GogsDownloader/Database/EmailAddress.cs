@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GogsDownloader.Database
+namespace GogsDownloader
 {
     public partial class EmailAddress
     {

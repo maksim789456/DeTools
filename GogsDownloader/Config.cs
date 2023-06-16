@@ -25,7 +25,7 @@ public class Config
     public string ConnectionString { get; set; } = "";
     [JsonConverter(typeof(StringEnumConverter))]
     public DatabaseType DatabaseType { get; set; } = DatabaseType.MySql;
-    public User[] Users { get; set; } = Array.Empty<User>();
+    public AccessUser[] Users { get; set; } = Array.Empty<AccessUser>();
     public bool UseExternalUsersFile { get; set; } = false;
     public string PathToUsersFile { get; set; } = "users.txt";
     public bool BranchesAsSeparateFolders { get; set; } = false;

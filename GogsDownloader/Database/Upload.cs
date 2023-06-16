@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GogsDownloader.Database
+namespace GogsDownloader
 {
     public partial class Upload
     {
         public long Id { get; set; }
-        public Guid? Uuid { get; set; }
+        public string? Uuid { get; set; }
         public string? Name { get; set; }
     }
 }

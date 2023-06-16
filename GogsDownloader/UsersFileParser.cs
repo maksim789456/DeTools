@@ -7,15 +7,15 @@ public static class UsersFileParser
     private static readonly Regex _loginRegex = new (@"^Логин:\s*(.*)\s$");
     private static readonly Regex _passwordRegex = new (@"^Пароль:\s*(.*)\s$");
 
-    public static IEnumerable<User> ParseFile(string pathToFile)
+    public static IEnumerable<AccessUser> ParseFile(string pathToFile)
     {
         if (!File.Exists(pathToFile))
         {
             Console.WriteLine("Users file dont exists!");
-            return Array.Empty<User>();
+            return Array.Empty<AccessUser>();
         }
 
-        var users = new List<User>();
+        var users = new List<AccessUser>();
 
         var lines = File.ReadAllLines(pathToFile);
         var lastParcedLogin = "";
@@ -38,7 +38,7 @@ public static class UsersFileParser
                 if (match.Success)
                 {
                     var password = match.Groups[1].Value;
-                    users.Add(new User(username: lastParcedLogin, password: password));
+                    users.Add(new AccessUser(username: lastParcedLogin, password: password));
                 }
             }
         }

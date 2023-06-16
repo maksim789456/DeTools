@@ -1,8 +1,8 @@
 ﻿namespace GogsDownloader;
 
-public class User
+public class AccessUser
 {
-    public User(string username, string password)
+    public AccessUser(string username, string password)
     {
         Username = username;
         Password = password;

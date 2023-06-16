@@ -17,14 +17,14 @@ public static class Tools
         if (!branchesAsSeparateFolders)
         {
             Console.WriteLine("Grabbing remote branches as local");
-            Repository.Clone(url, pathToSave, cloneOptions);
+            LibGit2Sharp.Repository.Clone(url, pathToSave, cloneOptions);
         }
         else
         {
             Console.WriteLine("Grabbing branches as folders");
             var tempFolder = Path.Combine(pathToSave, ".temp");
             RecreateDirectory(tempFolder);
-            Repository.Clone(url, tempFolder, cloneOptions);
+            LibGit2Sharp.Repository.Clone(url, tempFolder, cloneOptions);
             var branches = CloneRemoteRepositoryBranches(tempFolder);
             foreach (var branch in branches)
             {
@@ -32,7 +32,7 @@ public static class Tools
                 var branchPath = Path.Combine(pathToSave, branch);
                 RecreateDirectory(branchPath);
                 CopyFilesRecursively(tempFolder, branchPath);
-                using var repo = new Repository(branchPath);
+                using var repo = new LibGit2Sharp.Repository(branchPath);
                 Commands.Checkout(repo, branch);
             }
             RecursiveDeleteDirectory(tempFolder);
@@ -45,7 +45,7 @@ public static class Tools
     /// <param name="repoPath">local repository path</param>
     public static IEnumerable<string> CloneRemoteRepositoryBranches(string repoPath)
     {
-        using var repo = new Repository(repoPath);
+        using var repo = new LibGit2Sharp.Repository(repoPath);
 
         // if only one remote branch -> skip branches grabbing
         if (repo.Branches.Count(x => x.IsRemote) == 1)

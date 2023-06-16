@@ -1,19 +1,27 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using GogsDownloader;
 
 namespace GogsDownloader.Database
 {
-    public partial class GogsDbContext : DbContext
+    public partial class gogsContext : DbContext
     {
-        private string _connectionString;
-        public DatabaseType _databaseType;
+        private readonly string _connectionString;
+        private readonly DatabaseType _databaseType;
 
-        public GogsDbContext(string connectionString, DatabaseType dbType)
+        public gogsContext(string connectionString, DatabaseType dbType)
         {
             _connectionString = connectionString;
             _databaseType = dbType;
         }
 
-        public GogsDbContext(DbContextOptions<GogsDbContext> options)
+        public gogsContext()
+        {
+        }
+
+        public gogsContext(DbContextOptions<gogsContext> options)
             : base(options)
         {
         }
@@ -69,7 +77,7 @@ namespace GogsDownloader.Database
                         optionsBuilder.UseNpgsql(_connectionString);
                         break;
                     case DatabaseType.MySql:
-                        optionsBuilder.UseMySql(ServerVersion.AutoDetect(_connectionString));
+                        optionsBuilder.UseMySQL(_connectionString);
                         break;
                     case DatabaseType.Sqlite:
                         optionsBuilder.UseSqlite(_connectionString);
@@ -80,11 +88,14 @@ namespace GogsDownloader.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.UseCollation("utf8mb3_general_ci")
+                ;
+
             modelBuilder.Entity<Access>(entity =>
             {
                 entity.ToTable("access");
 
-                entity.HasIndex(e => new { e.UserId, e.RepoId }, "UQE_access_s")
+                entity.HasIndex(e => new { e.UserId, e.RepoId }, "access_user_repo_unique")
                     .IsUnique();
 
                 entity.Property(e => e.Id).HasColumnName("id");
@@ -100,10 +111,13 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("access_token");
 
-                entity.HasIndex(e => e.Sha1, "access_token_sha1_key")
+                entity.HasIndex(e => e.Uid, "idx_access_token_user_id");
+
+                entity.HasIndex(e => e.Sha1, "sha1")
                     .IsUnique();
 
-                entity.HasIndex(e => e.Uid, "idx_access_token_uid");
+                entity.HasIndex(e => e.Sha256, "sha256")
+                    .IsUnique();
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
@@ -115,6 +129,10 @@ namespace GogsDownloader.Database
                     .HasMaxLength(40)
                     .HasColumnName("sha1");
 
+                entity.Property(e => e.Sha256)
+                    .HasMaxLength(64)
+                    .HasColumnName("sha256");
+
                 entity.Property(e => e.Uid).HasColumnName("uid");
 
                 entity.Property(e => e.UpdatedUnix).HasColumnName("updated_unix");
@@ -124,15 +142,15 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("action");
 
-                entity.HasIndex(e => e.RepoId, "IDX_action_repo_id");
+                entity.HasIndex(e => e.RepoId, "idx_action_repo_id");
+
+                entity.HasIndex(e => e.UserId, "idx_action_user_id");
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
                 entity.Property(e => e.ActUserId).HasColumnName("act_user_id");
 
-                entity.Property(e => e.ActUserName)
-                    .HasMaxLength(255)
-                    .HasColumnName("act_user_name");
+                entity.Property(e => e.ActUserName).HasColumnName("act_user_name");
 
                 entity.Property(e => e.Content).HasColumnName("content");
 
@@ -142,19 +160,13 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.OpType).HasColumnName("op_type");
 
-                entity.Property(e => e.RefName)
-                    .HasMaxLength(255)
-                    .HasColumnName("ref_name");
+                entity.Property(e => e.RefName).HasColumnName("ref_name");
 
                 entity.Property(e => e.RepoId).HasColumnName("repo_id");
 
-                entity.Property(e => e.RepoName)
-                    .HasMaxLength(255)
-                    .HasColumnName("repo_name");
+                entity.Property(e => e.RepoName).HasColumnName("repo_name");
 
-                entity.Property(e => e.RepoUserName)
-                    .HasMaxLength(255)
-                    .HasColumnName("repo_user_name");
+                entity.Property(e => e.RepoUserName).HasColumnName("repo_user_name");
 
                 entity.Property(e => e.UserId).HasColumnName("user_id");
             });
@@ -162,6 +174,8 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<Attachment>(entity =>
             {
                 entity.ToTable("attachment");
+
+                
 
                 entity.HasIndex(e => e.IssueId, "IDX_attachment_issue_id");
 
@@ -184,25 +198,29 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.ReleaseId).HasColumnName("release_id");
 
-                entity.Property(e => e.Uuid).HasColumnName("uuid");
+                entity.Property(e => e.Uuid)
+                    .HasMaxLength(40)
+                    .HasColumnName("uuid");
             });
 
             modelBuilder.Entity<Collaboration>(entity =>
             {
                 entity.ToTable("collaboration");
 
+                
+
                 entity.HasIndex(e => e.RepoId, "IDX_collaboration_repo_id");
 
                 entity.HasIndex(e => e.UserId, "IDX_collaboration_user_id");
 
-                entity.HasIndex(e => new { e.RepoId, e.UserId }, "UQE_collaboration_s")
+                entity.HasIndex(e => new { e.UserId, e.RepoId }, "UQE_collaboration_s")
                     .IsUnique();
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
                 entity.Property(e => e.Mode)
                     .HasColumnName("mode")
-                    .HasDefaultValueSql("2");
+                    .HasDefaultValueSql("'2'");
 
                 entity.Property(e => e.RepoId).HasColumnName("repo_id");
 
@@ -212,6 +230,8 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<Comment>(entity =>
             {
                 entity.ToTable("comment");
+
+                
 
                 entity.HasIndex(e => e.IssueId, "IDX_comment_issue_id");
 
@@ -223,7 +243,9 @@ namespace GogsDownloader.Database
                     .HasMaxLength(40)
                     .HasColumnName("commit_sha");
 
-                entity.Property(e => e.Content).HasColumnName("content");
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
 
                 entity.Property(e => e.CreatedUnix).HasColumnName("created_unix");
 
@@ -241,6 +263,8 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<DeployKey>(entity =>
             {
                 entity.ToTable("deploy_key");
+
+                
 
                 entity.HasIndex(e => e.KeyId, "IDX_deploy_key_key_id");
 
@@ -272,6 +296,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("email_address");
 
+                
+
                 entity.HasIndex(e => e.Uid, "IDX_email_address_uid");
 
                 entity.HasIndex(e => e.Email, "UQE_email_address_email")
@@ -279,9 +305,7 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.Email)
-                    .HasMaxLength(255)
-                    .HasColumnName("email");
+                entity.Property(e => e.Email).HasColumnName("email");
 
                 entity.Property(e => e.IsActivated).HasColumnName("is_activated");
 
@@ -292,7 +316,7 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("follow");
 
-                entity.HasIndex(e => new { e.UserId, e.FollowId }, "UQE_follow_follow")
+                entity.HasIndex(e => new { e.UserId, e.FollowId }, "follow_user_follow_unique")
                     .IsUnique();
 
                 entity.Property(e => e.Id).HasColumnName("id");
@@ -305,6 +329,8 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<HookTask>(entity =>
             {
                 entity.ToTable("hook_task");
+
+                
 
                 entity.HasIndex(e => e.RepoId, "IDX_hook_task_repo_id");
 
@@ -326,19 +352,29 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.IsSucceed).HasColumnName("is_succeed");
 
-                entity.Property(e => e.PayloadContent).HasColumnName("payload_content");
+                entity.Property(e => e.PayloadContent)
+                    .HasColumnType("text")
+                    .HasColumnName("payload_content");
 
                 entity.Property(e => e.RepoId).HasColumnName("repo_id");
 
-                entity.Property(e => e.RequestContent).HasColumnName("request_content");
+                entity.Property(e => e.RequestContent)
+                    .HasColumnType("text")
+                    .HasColumnName("request_content");
 
-                entity.Property(e => e.ResponseContent).HasColumnName("response_content");
+                entity.Property(e => e.ResponseContent)
+                    .HasColumnType("text")
+                    .HasColumnName("response_content");
 
-                entity.Property(e => e.Signature).HasColumnName("signature");
+                entity.Property(e => e.Signature)
+                    .HasColumnType("text")
+                    .HasColumnName("signature");
 
                 entity.Property(e => e.Type).HasColumnName("type");
 
-                entity.Property(e => e.Url).HasColumnName("url");
+                entity.Property(e => e.Url)
+                    .HasColumnType("text")
+                    .HasColumnName("url");
 
                 entity.Property(e => e.Uuid)
                     .HasMaxLength(255)
@@ -349,6 +385,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("issue");
 
+                
+
                 entity.HasIndex(e => e.RepoId, "IDX_issue_repo_id");
 
                 entity.HasIndex(e => new { e.RepoId, e.Index }, "UQE_issue_repo_index")
@@ -358,7 +396,9 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.AssigneeId).HasColumnName("assignee_id");
 
-                entity.Property(e => e.Content).HasColumnName("content");
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
 
                 entity.Property(e => e.CreatedUnix).HasColumnName("created_unix");
 
@@ -391,6 +431,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("issue_label");
 
+                
+
                 entity.HasIndex(e => new { e.IssueId, e.LabelId }, "UQE_issue_label_s")
                     .IsUnique();
 
@@ -404,6 +446,8 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<IssueUser>(entity =>
             {
                 entity.ToTable("issue_user");
+
+                
 
                 entity.HasIndex(e => e.RepoId, "IDX_issue_user_repo_id");
 
@@ -434,6 +478,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("label");
 
+                
+
                 entity.HasIndex(e => e.RepoId, "IDX_label_repo_id");
 
                 entity.Property(e => e.Id).HasColumnName("id");
@@ -456,15 +502,20 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<LfsObject>(entity =>
             {
                 entity.HasKey(e => new { e.RepoId, e.Oid })
-                    .HasName("lfs_object_pkey");
+                    .HasName("PRIMARY")
+                    .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
 
                 entity.ToTable("lfs_object");
 
                 entity.Property(e => e.RepoId).HasColumnName("repo_id");
 
-                entity.Property(e => e.Oid).HasColumnName("oid");
+                entity.Property(e => e.Oid)
+                    .HasMaxLength(191)
+                    .HasColumnName("oid");
 
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.CreatedAt)
+                    .HasColumnType("datetime(3)")
+                    .HasColumnName("created_at");
 
                 entity.Property(e => e.Size).HasColumnName("size");
 
@@ -475,12 +526,14 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("login_source");
 
-                entity.HasIndex(e => e.Name, "login_source_name_key")
+                entity.HasIndex(e => e.Name, "name")
                     .IsUnique();
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.Cfg).HasColumnName("cfg");
+                entity.Property(e => e.Cfg)
+                    .HasColumnType("text")
+                    .HasColumnName("cfg");
 
                 entity.Property(e => e.CreatedUnix).HasColumnName("created_unix");
 
@@ -488,7 +541,9 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.IsDefault).HasColumnName("is_default");
 
-                entity.Property(e => e.Name).HasColumnName("name");
+                entity.Property(e => e.Name)
+                    .HasMaxLength(191)
+                    .HasColumnName("name");
 
                 entity.Property(e => e.Type).HasColumnName("type");
 
@@ -499,6 +554,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("milestone");
 
+                
+
                 entity.HasIndex(e => e.RepoId, "IDX_milestone_repo_id");
 
                 entity.Property(e => e.Id).HasColumnName("id");
@@ -507,7 +564,9 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.Completeness).HasColumnName("completeness");
 
-                entity.Property(e => e.Content).HasColumnName("content");
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
 
                 entity.Property(e => e.DeadlineUnix).HasColumnName("deadline_unix");
 
@@ -528,12 +587,14 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("mirror");
 
+                
+
                 entity.Property(e => e.Id).HasColumnName("id");
 
                 entity.Property(e => e.EnablePrune)
                     .IsRequired()
                     .HasColumnName("enable_prune")
-                    .HasDefaultValueSql("true");
+                    .HasDefaultValueSql("'1'");
 
                 entity.Property(e => e.Interval).HasColumnName("interval");
 
@@ -548,11 +609,15 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("notice");
 
+                
+
                 entity.Property(e => e.Id).HasColumnName("id");
 
                 entity.Property(e => e.CreatedUnix).HasColumnName("created_unix");
 
-                entity.Property(e => e.Description).HasColumnName("description");
+                entity.Property(e => e.Description)
+                    .HasColumnType("text")
+                    .HasColumnName("description");
 
                 entity.Property(e => e.Type).HasColumnName("type");
             });
@@ -560,6 +625,8 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<OrgUser>(entity =>
             {
                 entity.ToTable("org_user");
+
+                
 
                 entity.HasIndex(e => e.OrgId, "IDX_org_user_org_id");
 
@@ -585,6 +652,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("protect_branch");
 
+                
+
                 entity.HasIndex(e => new { e.RepoId, e.Name }, "UQE_protect_branch_protect_branch")
                     .IsUnique();
 
@@ -592,9 +661,7 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.EnableWhitelist).HasColumnName("enable_whitelist");
 
-                entity.Property(e => e.Name)
-                    .HasMaxLength(255)
-                    .HasColumnName("name");
+                entity.Property(e => e.Name).HasColumnName("name");
 
                 entity.Property(e => e.Protected).HasColumnName("protected");
 
@@ -602,23 +669,27 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.RequirePullRequest).HasColumnName("require_pull_request");
 
-                entity.Property(e => e.WhitelistTeamIDs).HasColumnName("whitelist_team_i_ds");
+                entity.Property(e => e.WhitelistTeamIDs)
+                    .HasColumnType("text")
+                    .HasColumnName("whitelist_team_i_ds");
 
-                entity.Property(e => e.WhitelistUserIDs).HasColumnName("whitelist_user_i_ds");
+                entity.Property(e => e.WhitelistUserIDs)
+                    .HasColumnType("text")
+                    .HasColumnName("whitelist_user_i_ds");
             });
 
             modelBuilder.Entity<ProtectBranchWhitelist>(entity =>
             {
                 entity.ToTable("protect_branch_whitelist");
 
+                
+
                 entity.HasIndex(e => new { e.RepoId, e.Name, e.UserId }, "UQE_protect_branch_whitelist_protect_branch_whitelist")
                     .IsUnique();
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.Name)
-                    .HasMaxLength(255)
-                    .HasColumnName("name");
+                entity.Property(e => e.Name).HasColumnName("name");
 
                 entity.Property(e => e.ProtectBranchId).HasColumnName("protect_branch_id");
 
@@ -631,11 +702,15 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("public_key");
 
+                
+
                 entity.HasIndex(e => e.OwnerId, "IDX_public_key_owner_id");
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.Content).HasColumnName("content");
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
 
                 entity.Property(e => e.CreatedUnix).HasColumnName("created_unix");
 
@@ -645,7 +720,7 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.Mode)
                     .HasColumnName("mode")
-                    .HasDefaultValueSql("2");
+                    .HasDefaultValueSql("'2'");
 
                 entity.Property(e => e.Name)
                     .HasMaxLength(255)
@@ -655,7 +730,7 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.Type)
                     .HasColumnName("type")
-                    .HasDefaultValueSql("1");
+                    .HasDefaultValueSql("'1'");
 
                 entity.Property(e => e.UpdatedUnix).HasColumnName("updated_unix");
             });
@@ -663,6 +738,8 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<PullRequest>(entity =>
             {
                 entity.ToTable("pull_request");
+
+                
 
                 entity.HasIndex(e => e.IssueId, "IDX_pull_request_issue_id");
 
@@ -711,6 +788,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("release");
 
+                
+
                 entity.Property(e => e.Id).HasColumnName("id");
 
                 entity.Property(e => e.CreatedUnix).HasColumnName("created_unix");
@@ -723,7 +802,9 @@ namespace GogsDownloader.Database
                     .HasMaxLength(255)
                     .HasColumnName("lower_tag_name");
 
-                entity.Property(e => e.Note).HasColumnName("note");
+                entity.Property(e => e.Note)
+                    .HasColumnType("text")
+                    .HasColumnName("note");
 
                 entity.Property(e => e.NumCommits).HasColumnName("num_commits");
 
@@ -751,6 +832,8 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<Repository>(entity =>
             {
                 entity.ToTable("repository");
+
+                
 
                 entity.HasIndex(e => e.LowerName, "IDX_repository_lower_name");
 
@@ -782,17 +865,17 @@ namespace GogsDownloader.Database
                 entity.Property(e => e.EnableIssues)
                     .IsRequired()
                     .HasColumnName("enable_issues")
-                    .HasDefaultValueSql("true");
+                    .HasDefaultValueSql("'1'");
 
                 entity.Property(e => e.EnablePulls)
                     .IsRequired()
                     .HasColumnName("enable_pulls")
-                    .HasDefaultValueSql("true");
+                    .HasDefaultValueSql("'1'");
 
                 entity.Property(e => e.EnableWiki)
                     .IsRequired()
                     .HasColumnName("enable_wiki")
-                    .HasDefaultValueSql("true");
+                    .HasDefaultValueSql("'1'");
 
                 entity.Property(e => e.ExternalTrackerFormat)
                     .HasMaxLength(255)
@@ -820,13 +903,11 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.IsPrivate).HasColumnName("is_private");
 
-                entity.Property(e => e.LowerName)
-                    .HasMaxLength(255)
-                    .HasColumnName("lower_name");
+                entity.Property(e => e.IsUnlisted).HasColumnName("is_unlisted");
 
-                entity.Property(e => e.Name)
-                    .HasMaxLength(255)
-                    .HasColumnName("name");
+                entity.Property(e => e.LowerName).HasColumnName("lower_name");
+
+                entity.Property(e => e.Name).HasColumnName("name");
 
                 entity.Property(e => e.NumClosedIssues).HasColumnName("num_closed_issues");
 
@@ -867,6 +948,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("star");
 
+                
+
                 entity.HasIndex(e => new { e.Uid, e.RepoId }, "UQE_star_s")
                     .IsUnique();
 
@@ -880,6 +963,8 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<Team>(entity =>
             {
                 entity.ToTable("team");
+
+                
 
                 entity.HasIndex(e => e.OrgId, "IDX_team_org_id");
 
@@ -910,6 +995,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("team_repo");
 
+                
+
                 entity.HasIndex(e => e.OrgId, "IDX_team_repo_org_id");
 
                 entity.HasIndex(e => new { e.TeamId, e.RepoId }, "UQE_team_repo_s")
@@ -927,6 +1014,8 @@ namespace GogsDownloader.Database
             modelBuilder.Entity<TeamUser>(entity =>
             {
                 entity.ToTable("team_user");
+
+                
 
                 entity.HasIndex(e => e.OrgId, "IDX_team_user_org_id");
 
@@ -946,6 +1035,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("two_factor");
 
+                
+
                 entity.HasIndex(e => e.UserId, "UQE_two_factor_user_id")
                     .IsUnique();
 
@@ -964,6 +1055,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("two_factor_recovery_code");
 
+                
+
                 entity.Property(e => e.Id).HasColumnName("id");
 
                 entity.Property(e => e.Code)
@@ -979,6 +1072,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("upload");
 
+                
+
                 entity.HasIndex(e => e.Uuid, "UQE_upload_uuid")
                     .IsUnique();
 
@@ -988,12 +1083,16 @@ namespace GogsDownloader.Database
                     .HasMaxLength(255)
                     .HasColumnName("name");
 
-                entity.Property(e => e.Uuid).HasColumnName("uuid");
+                entity.Property(e => e.Uuid)
+                    .HasMaxLength(40)
+                    .HasColumnName("uuid");
             });
 
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("user");
+
+                
 
                 entity.HasIndex(e => e.LowerName, "UQE_user_lower_name")
                     .IsUnique();
@@ -1045,17 +1144,13 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.LoginSource).HasColumnName("login_source");
 
-                entity.Property(e => e.LowerName)
-                    .HasMaxLength(255)
-                    .HasColumnName("lower_name");
+                entity.Property(e => e.LowerName).HasColumnName("lower_name");
 
                 entity.Property(e => e.MaxRepoCreation)
                     .HasColumnName("max_repo_creation")
-                    .HasDefaultValueSql("'-1'::integer");
+                    .HasDefaultValueSql("'-1'");
 
-                entity.Property(e => e.Name)
-                    .HasMaxLength(255)
-                    .HasColumnName("name");
+                entity.Property(e => e.Name).HasColumnName("name");
 
                 entity.Property(e => e.NumFollowers).HasColumnName("num_followers");
 
@@ -1107,6 +1202,8 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("watch");
 
+                
+
                 entity.HasIndex(e => new { e.UserId, e.RepoId }, "UQE_watch_watch")
                     .IsUnique();
 
@@ -1121,13 +1218,17 @@ namespace GogsDownloader.Database
             {
                 entity.ToTable("webhook");
 
+                
+
                 entity.Property(e => e.Id).HasColumnName("id");
 
                 entity.Property(e => e.ContentType).HasColumnName("content_type");
 
                 entity.Property(e => e.CreatedUnix).HasColumnName("created_unix");
 
-                entity.Property(e => e.Events).HasColumnName("events");
+                entity.Property(e => e.Events)
+                    .HasColumnType("text")
+                    .HasColumnName("events");
 
                 entity.Property(e => e.HookTaskType).HasColumnName("hook_task_type");
 
@@ -1137,17 +1238,23 @@ namespace GogsDownloader.Database
 
                 entity.Property(e => e.LastStatus).HasColumnName("last_status");
 
-                entity.Property(e => e.Meta).HasColumnName("meta");
+                entity.Property(e => e.Meta)
+                    .HasColumnType("text")
+                    .HasColumnName("meta");
 
                 entity.Property(e => e.OrgId).HasColumnName("org_id");
 
                 entity.Property(e => e.RepoId).HasColumnName("repo_id");
 
-                entity.Property(e => e.Secret).HasColumnName("secret");
+                entity.Property(e => e.Secret)
+                    .HasColumnType("text")
+                    .HasColumnName("secret");
 
                 entity.Property(e => e.UpdatedUnix).HasColumnName("updated_unix");
 
-                entity.Property(e => e.Url).HasColumnName("url");
+                entity.Property(e => e.Url)
+                    .HasColumnType("text")
+                    .HasColumnName("url");
             });
 
             OnModelCreatingPartial(modelBuilder);
