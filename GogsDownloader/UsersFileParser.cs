@@ -4,8 +4,8 @@ namespace GogsDownloader;
 
 public static class UsersFileParser
 {
-    private static readonly Regex _loginRegex = new (@"^Логин:\s*(.*)\s$");
-    private static readonly Regex _passwordRegex = new (@"^Пароль:\s*(.*)\s$");
+    private static readonly Regex _loginRegex = new(@"^Логин:\s*(.*)\s$");
+    private static readonly Regex _passwordRegex = new(@"^Пароль:\s*(.*)\s$");
 
     public static IEnumerable<AccessUser> ParseFile(string pathToFile)
     {

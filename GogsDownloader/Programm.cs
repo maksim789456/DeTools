@@ -66,7 +66,8 @@ foreach (var user in users)
     foreach (var repo in gogsUserRepos)
     {
         var path = Tools.RecreateUserRepoDir("userData", user.Username, repo.Name);
-        Tools.CloneRepository(baseRepoStr, user.Username, user.Password, repo.Name, path, config.BranchesAsSeparateFolders);
+        Tools.CloneRepository(baseRepoStr, user.Username, user.Password, repo.Name, path,
+            config.BranchesAsSeparateFolders);
     }
 }
 

@@ -7,7 +7,9 @@ public class Config
 {
     private static Config? instance;
 
-    private Config() {}
+    private Config()
+    {
+    }
 
     public static Config GetInstance()
     {
@@ -23,8 +25,10 @@ public class Config
 
     public string BaseGogsUrl { get; set; } = "http://localhost:3000";
     public string ConnectionString { get; set; } = "";
+
     [JsonConverter(typeof(StringEnumConverter))]
     public DatabaseType DatabaseType { get; set; } = DatabaseType.MySql;
+
     public AccessUser[] Users { get; set; } = Array.Empty<AccessUser>();
     public bool UseExternalUsersFile { get; set; } = false;
     public string PathToUsersFile { get; set; } = "users.txt";

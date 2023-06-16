@@ -4,7 +4,8 @@ namespace GogsDownloader;
 
 public static class Tools
 {
-    public static void CloneRepository(string baseRepoUrl, string username, string password, string repoName, string pathToSave, bool branchesAsSeparateFolders)
+    public static void CloneRepository(string baseRepoUrl, string username, string password, string repoName,
+        string pathToSave, bool branchesAsSeparateFolders)
     {
         var credentials = new UsernamePasswordCredentials
             { Username = username, Password = password };
@@ -35,6 +36,7 @@ public static class Tools
                 using var repo = new LibGit2Sharp.Repository(branchPath);
                 Commands.Checkout(repo, branch);
             }
+
             RecursiveDeleteDirectory(tempFolder);
         }
     }
@@ -122,7 +124,7 @@ public static class Tools
             Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
         }
 
-        foreach (var newPath in Directory.GetFiles(sourcePath, "*.*",SearchOption.AllDirectories))
+        foreach (var newPath in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories))
         {
             File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
         }
