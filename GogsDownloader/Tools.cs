@@ -25,7 +25,7 @@ public static class Tools
             var tempFolder = Path.Combine(pathToSave, ".temp");
             RecreateDirectory(tempFolder);
             LibGit2Sharp.Repository.Clone(url, tempFolder, cloneOptions);
-            var branches = CloneRemoteRepositoryBranches(tempFolder);
+            var branches = CloneRemoteRepositoryBranches(tempFolder).ToArray();
             foreach (var branch in branches)
             {
                 Console.WriteLine($"{branch} as work");
@@ -46,10 +46,6 @@ public static class Tools
     public static IEnumerable<string> CloneRemoteRepositoryBranches(string repoPath)
     {
         using var repo = new LibGit2Sharp.Repository(repoPath);
-
-        // if only one remote branch -> skip branches grabbing
-        if (repo.Branches.Count(x => x.IsRemote) == 1)
-            return Array.Empty<string>();
 
         // starting remote branches grabbing
         foreach (var remoteBranch in repo.Branches.Where(x => x.IsRemote))
