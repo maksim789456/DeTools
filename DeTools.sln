@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GogsDownloader", "GogsDownl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbChecker", "DbChecker\DbChecker.csproj", "{E296F289-C258-46AD-BBBF-9CF068EF3D45}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateUsers", "CreateUsers\CreateUsers.csproj", "{44A83CD5-48AA-4074-8022-CFE9E3858B99}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{E296F289-C258-46AD-BBBF-9CF068EF3D45}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E296F289-C258-46AD-BBBF-9CF068EF3D45}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E296F289-C258-46AD-BBBF-9CF068EF3D45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44A83CD5-48AA-4074-8022-CFE9E3858B99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44A83CD5-48AA-4074-8022-CFE9E3858B99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44A83CD5-48AA-4074-8022-CFE9E3858B99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44A83CD5-48AA-4074-8022-CFE9E3858B99}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
