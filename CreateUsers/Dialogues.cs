@@ -17,7 +17,7 @@ public static class Dialogues
             new SelectionPrompt<IdType>()
                 .Title("Выберете как создавать аккаунты:")
                 .UseConverter(x => Utils.EnumGetDescriptionConverter(x))
-                .AddChoices(Enum.GetValues(typeof(IdType)).Cast<IdType>())
+                .AddChoices(Enum.GetValues<IdType>().Cast<IdType>())
         );
 
         switch (idType)
