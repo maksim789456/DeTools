@@ -32,7 +32,14 @@ if (!checkRes)
 var groupName = Dialogues.AskGroupName();
 Console.WriteLine(groupName);
 
-Dialogues.AskUsersCreateSettings();
+var users = Dialogues.MakeUsers(groupName);
+var table = new Table();
+table.AddColumn("Username");
+table.AddColumn("Password");
+
+foreach (var user in users)
+    table.AddRow(user.Item1, user.Item2);
+AnsiConsole.Write(table);
 
 var accountTypes = AnsiConsole.Prompt(
     new MultiSelectionPrompt<AccountType>()

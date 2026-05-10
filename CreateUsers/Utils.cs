@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Reflection;
+using System.Security.Cryptography;
 
 namespace CreateUsers;
 
@@ -16,5 +17,22 @@ public class Utils
             field.GetCustomAttribute<DescriptionAttribute>();
 
         return attribute?.Description ?? value.ToString();
+    }
+
+    public static string GeneratePassword(int length = 10)
+    {
+        const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+        Span<char> result = stackalloc char[length];
+        Span<byte> buffer = stackalloc byte[length];
+
+        RandomNumberGenerator.Fill(buffer);
+
+        for (var i = 0; i < length; i++)
+        {
+            result[i] = chars[buffer[i] % chars.Length];
+        }
+
+        return new string(result);
     }
 }

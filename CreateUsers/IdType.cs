@@ -6,6 +6,6 @@ public enum IdType
 {
     [Description("По номеру рабочего места")]
     WorkspaceNumber,
-    [Description("По списку студентов")]
+    [Description("По списку студентов (csv разделение по ,)")]
     GroupList
 }
