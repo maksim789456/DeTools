@@ -24,7 +24,6 @@ var checkRes = await AnsiConsole.Status().StartAsync("Проверяем сер�
     if (gogsRes.Item1 && sqlServerRes.Item1 && mysqlRes.Item1) return true;
     AnsiConsole.MarkupLine("[red]Один из серверов недоступен или не хватает прав[/]");
     return false;
-
 });
 if (!checkRes)
     return 1;
@@ -33,22 +32,9 @@ var groupName = Dialogues.AskGroupName();
 Console.WriteLine(groupName);
 
 var users = Dialogues.MakeUsers(groupName);
-var table = new Table();
-table.AddColumn("Username");
-table.AddColumn("Password");
+Dialogues.PrintUsers(users);
 
-foreach (var user in users)
-    table.AddRow(user.Item1, user.Item2);
-AnsiConsole.Write(table);
-
-var accountTypes = AnsiConsole.Prompt(
-    new MultiSelectionPrompt<AccountType>()
-        .Title("Выберете где создавать аккаунты:")
-        .AddChoices(Enum.GetValues<AccountType>().Cast<AccountType>())
-        .Select(AccountType.Gogs)
-        .Select(AccountType.MySql)
-        .Select(AccountType.SqlServer)
-);
+var accountTypes = Dialogues.AskAccountTypes();
 
 foreach (var accountType in accountTypes)
 {
@@ -56,4 +42,5 @@ foreach (var accountType in accountTypes)
 }
 
 sqlServer.Dispose();
+mysql.Dispose();
 return 0;

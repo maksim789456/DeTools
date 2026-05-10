@@ -11,6 +11,26 @@ public static class Dialogues
         return Transliteration.CyrillicToLatin(groupName, Language.Russian).Replace('-', '_').ToUpper();
     }
 
+    public static List<AccountType> AskAccountTypes() => AnsiConsole.Prompt(
+        new MultiSelectionPrompt<AccountType>()
+            .Title("Выберете где создавать аккаунты:")
+            .AddChoices(Enum.GetValues<AccountType>().Cast<AccountType>())
+            .Select(AccountType.Gogs)
+            .Select(AccountType.MySql)
+            .Select(AccountType.SqlServer)
+    );
+
+    public static void PrintUsers(IReadOnlyList<(string, string)> users)
+    {
+        var table = new Table();
+        table.AddColumn("Логин");
+        table.AddColumn("Пароль");
+
+        foreach (var user in users)
+            table.AddRow(user.Item1, user.Item2);
+        AnsiConsole.Write(table);
+    }
+
     public static IReadOnlyList<(string, string)> MakeUsers(string groupName)
     {
         var idType = AnsiConsole.Prompt(
