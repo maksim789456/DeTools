@@ -6,6 +6,8 @@ namespace CreateUsers.Managers;
 
 public class SqlServerManager : IDatabaseManager, IDisposable, IAsyncDisposable
 {
+    public string Name => "SqlServer";
+
     private readonly string _sqlServerConnectionString = Env.GetString("SQLSERVER_CONNECTION_STRING");
     private SqlConnection _connection = null!;
 

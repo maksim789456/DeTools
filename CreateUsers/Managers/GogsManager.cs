@@ -31,6 +31,8 @@ public sealed class CreateUserRequest
 
 public class GogsManager : IAccountManager
 {
+    public string Name => "Gogs";
+
     private readonly string _gogsUrl = Env.GetString("GOGS_URL");
     private readonly string _gogsEmail = Env.GetString("GOGS_EMAIL", "de.test.ru");
     private Uri _gogsUri = null!;

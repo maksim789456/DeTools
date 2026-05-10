@@ -7,6 +7,8 @@ namespace CreateUsers.Managers;
 
 public partial class MySqlManager : IDatabaseManager, IDisposable, IAsyncDisposable
 {
+    public string Name => "MySql";
+
     private readonly string _mySqlConnectionString = Env.GetString("MYSQL_CONNECTION_STRING");
     private MySqlConnection _connection = null!;
 
