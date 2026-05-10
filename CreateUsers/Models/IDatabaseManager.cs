@@ -1,4 +1,4 @@
-namespace CreateUsers.Managers;
+namespace CreateUsers.Models;
 
 public interface IDatabaseManager : IAccountManager
 {

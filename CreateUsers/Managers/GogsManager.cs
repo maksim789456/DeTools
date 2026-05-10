@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using CreateUsers.Models;
 using DotNetEnv;
 
 namespace CreateUsers.Managers;
@@ -89,14 +90,14 @@ public class GogsManager : IAccountManager
         return result.ToList();
     }
 
-    public async Task<bool> CreateUser(string username, string password)
+    public async Task<bool> CreateUser(User user)
     {
         var url = new Uri(_gogsUri, "/api/v1/admin/users");
         var request = new CreateUserRequest
         {
-            Username = username,
-            Password = password,
-            Email = $"{username}@{_gogsEmail}"
+            Username = user.Username,
+            Password = user.Password,
+            Email = $"{user.Username}@{_gogsEmail}"
         };
 
         using var response = await _httpClient.PostAsJsonAsync(url, request);

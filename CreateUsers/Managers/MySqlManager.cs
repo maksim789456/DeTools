@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using CreateUsers.Models;
 using DotNetEnv;
 using MySql.Data.MySqlClient;
 
@@ -66,9 +67,9 @@ public partial class MySqlManager : IDatabaseManager, IDisposable, IAsyncDisposa
         return users.Except(_dbUsersBlackList).ToList();
     }
 
-    public async Task<bool> CreateUser(string username, string password)
+    public async Task<bool> CreateUser(User user)
     {
-        if (!MySqlSafeNameRegex().IsMatch(username))
+        if (!MySqlSafeNameRegex().IsMatch(user.Username))
             return false;
 
         await using var transaction = await _connection.BeginTransactionAsync();
@@ -76,13 +77,13 @@ public partial class MySqlManager : IDatabaseManager, IDisposable, IAsyncDisposa
         {
             await using var cmd1 = _connection.CreateCommand();
             cmd1.Transaction = transaction;
-            cmd1.CommandText = $"CREATE USER IF NOT EXISTS '{username}'@'%' IDENTIFIED BY @password";
-            cmd1.Parameters.AddWithValue("@password", password);
+            cmd1.CommandText = $"CREATE USER IF NOT EXISTS '{user.Username}'@'%' IDENTIFIED BY @password";
+            cmd1.Parameters.AddWithValue("@password", user.Password);
             await cmd1.ExecuteNonQueryAsync();
 
             await using var cmd2 = _connection.CreateCommand();
             cmd2.Transaction = transaction;
-            cmd2.CommandText = $"GRANT ALL PRIVILEGES ON `{username}`.* TO '{username}'@'%'";
+            cmd2.CommandText = $"GRANT ALL PRIVILEGES ON `{user.Username}`.* TO '{user.Username}'@'%'";
             await cmd2.ExecuteNonQueryAsync();
 
             await transaction.CommitAsync();

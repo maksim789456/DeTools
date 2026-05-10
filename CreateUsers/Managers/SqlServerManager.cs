@@ -1,3 +1,4 @@
+using CreateUsers.Models;
 using DotNetEnv;
 using Microsoft.Data.SqlClient;
 
@@ -63,10 +64,10 @@ public class SqlServerManager : IDatabaseManager, IDisposable, IAsyncDisposable
         return result.Except(_dbUsersBlackList).ToList();
     }
 
-    public async Task<bool> CreateUser(string username, string password)
+    public async Task<bool> CreateUser(User user)
     {
-        var escapedName = EscapeIdentifier(username);
-        var escapedPassword = password.Replace("'", "''");
+        var escapedName = EscapeIdentifier(user.Username);
+        var escapedPassword = user.Password.Replace("'", "''");
 
         try
         {

@@ -1,3 +1,4 @@
+using CreateUsers.Models;
 using NickBuhro.Translit;
 using Spectre.Console;
 
@@ -20,18 +21,18 @@ public static class Dialogues
             .Select(AccountType.SqlServer)
     );
 
-    public static void PrintUsers(IReadOnlyList<(string, string)> users)
+    public static void PrintUsers(IReadOnlyList<User> users)
     {
         var table = new Table();
         table.AddColumn("Логин");
         table.AddColumn("Пароль");
 
         foreach (var user in users)
-            table.AddRow(user.Item1, user.Item2);
+            table.AddRow(user.Username, user.Password);
         AnsiConsole.Write(table);
     }
 
-    public static IReadOnlyList<(string, string)> MakeUsers(string groupName)
+    public static IReadOnlyList<User> MakeUsers(string groupName)
     {
         var idType = AnsiConsole.Prompt(
             new SelectionPrompt<IdType>()
@@ -40,14 +41,14 @@ public static class Dialogues
                 .AddChoices(Enum.GetValues<IdType>().Cast<IdType>())
         );
 
-        var users = new List<(string, string)>();
+        var users = new List<User>();
 
         switch (idType)
         {
             case IdType.WorkspaceNumber:
                 var workspacesCount = AskWorkspacesCount();
                 users.AddRange(Enumerable.Range(1, workspacesCount)
-                    .Select(i => ($"{groupName}_{i}", Utils.GeneratePassword())));
+                    .Select(i => new User($"{groupName}_{i}", Utils.GeneratePassword())));
                 break;
             case IdType.GroupList:
                 var groupListFilepath = AskGroupListFilepath();
@@ -56,7 +57,7 @@ public static class Dialogues
                     .Select(x => x.Split(','))
                     .Select(x => x[0])
                     .Select(x => Transliteration.CyrillicToLatin(x, Language.Russian))
-                    .Select(x => ($"{groupName}_{x}", Utils.GeneratePassword()))
+                    .Select(x => new User($"{groupName}_{x}", Utils.GeneratePassword()))
                 );
                 break;
             default:
