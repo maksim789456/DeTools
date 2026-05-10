@@ -23,23 +23,23 @@ public static class Dialogues
         switch (idType)
         {
             case IdType.WorkspaceNumber:
-                AskUsersCreateWorkspaces();
+                AskWorkspacesCount();
                 break;
             case IdType.GroupList:
-                AskUsersCreateGroupList();
+                AskGroupListFilepath();
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
     }
 
-    public static void AskUsersCreateWorkspaces()
+    public static void AskWorkspacesCount()
     {
         var maxWorkspaceNumber = AnsiConsole.Ask("Количество рабочих мест:", 20);
         Console.WriteLine(maxWorkspaceNumber);
     }
 
-    public static void AskUsersCreateGroupList()
+    public static void AskGroupListFilepath()
     {
         var groupListFilepath = AnsiConsole.Prompt(
             new TextPrompt<string>("Путь до списка студентов:")

@@ -50,21 +50,28 @@ public class GogsManager : IAccountManager
             return (false, "Некорректный адрес сервера Gogs: " + e.Message);
         }
 
-        using var gogsAliveRes =
-            await _httpClient.GetAsync(_gogsUri);
-        if (!gogsAliveRes.IsSuccessStatusCode)
-            return (false, "Сервер Gogs недоступен или не отвечает");
+        try
+        {
+            using var gogsAliveRes =
+                await _httpClient.GetAsync(_gogsUri);
+            if (!gogsAliveRes.IsSuccessStatusCode)
+                return (false, "Сервер Gogs недоступен или не отвечает");
 
-        if (string.IsNullOrWhiteSpace(_gogsAdminApiKey))
-            return (false, "Отсутствует админский API ключ");
+            if (string.IsNullOrWhiteSpace(_gogsAdminApiKey))
+                return (false, "Отсутствует админский API ключ");
 
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"token {_gogsAdminApiKey}");
-        _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"token {_gogsAdminApiKey}");
+            _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
-        using var gogsAdminRes =
-            await _httpClient.GetAsync(new Uri(_gogsUri, "/api/v1/admin/teams/-1/members"));
-        if (gogsAdminRes.StatusCode == HttpStatusCode.Forbidden)
-            return (false, "Некорректный ключ администратора");
+            using var gogsAdminRes =
+                await _httpClient.GetAsync(new Uri(_gogsUri, "/api/v1/admin/teams/-1/members"));
+            if (gogsAdminRes.StatusCode == HttpStatusCode.Forbidden)
+                return (false, "Некорректный ключ администратора");
+        }
+        catch (Exception e)
+        {
+            return (false, "Ошибка подключения к Gogs: " + e.Message);
+        }
 
         return (true, "");
     }
@@ -75,7 +82,7 @@ public class GogsManager : IAccountManager
         using var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
 
-        var users = 
+        var users =
             await response.Content.ReadFromJsonAsync<GogsResponse<GogsUser>>() ?? new GogsResponse<GogsUser>();
         var result = users.Data.Select(x => x.Username);
 
