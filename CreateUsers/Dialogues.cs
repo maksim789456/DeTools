@@ -36,7 +36,7 @@ public static class Dialogues
                     .Select(x => x.Split(','))
                     .Select(x => x[0])
                     .Select(x => Transliteration.CyrillicToLatin(x, Language.Russian))
-                    .Select(x => (x, Utils.GeneratePassword()))
+                    .Select(x => ($"{groupName}_{x}", Utils.GeneratePassword()))
                 );
                 break;
             default:
