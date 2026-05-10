@@ -1,5 +1,6 @@
 ﻿using CreateUsers;
 using CreateUsers.Managers;
+using CreateUsers.Models;
 using DotNetEnv;
 using Spectre.Console;
 
@@ -36,10 +37,40 @@ Dialogues.PrintUsers(users);
 
 var accountTypes = Dialogues.AskAccountTypes();
 
-foreach (var accountType in accountTypes)
+var tasks = users
+    .SelectMany(user => accountTypes.Select(accountType =>
+    {
+        IAccountManager manager = accountType switch
+        {
+            AccountType.Gogs => gogs,
+            AccountType.SqlServer => sqlServer,
+            AccountType.MySql => mysql,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        return (manager, user);
+    }))
+    .ToList();
+
+foreach (var task in tasks)
 {
-    Console.WriteLine($"{accountType}");
+    if (task.manager is IDatabaseManager dbManager)
+    {
+        var dbRes = await dbManager.CreateDatabase(task.user.Username);
+        if (!dbRes)
+            AnsiConsole.MarkupLine(
+                $"[red]Ошибка при создании базы данных {task.user.Username} в {task.manager.Name}[/]");
+    }
+
+    var userRes = await task.manager.CreateUser(task.user);
+    if (!userRes)
+        AnsiConsole.MarkupLine($"[red]Ошибка при создании пользователя {task.user.Username} в {task.manager.Name}[/]");
 }
+
+AnsiConsole.MarkupLine("[green]✓ Все пользователи/БД созданы[/]");
+var exportFilename = $"{groupName}_users.csv";
+File.WriteAllLines(exportFilename, users.Select(u => $"{groupName},{u.Username},{u.Password}"));
+AnsiConsole.MarkupLine($"[green] Логины и пароли пользователей выгружены в {exportFilename}[/]");
 
 sqlServer.Dispose();
 mysql.Dispose();
